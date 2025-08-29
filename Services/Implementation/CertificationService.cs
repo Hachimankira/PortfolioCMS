@@ -62,18 +62,18 @@ namespace PortfolioCMS.Services.Implementation
             return _mapper.Map<CertificationResponseDto>(certification);
         }
 
-        public async Task<bool> UpdateAsync(UpdateCertificationDto dto, int id, string userId)
+        public async Task<CertificationResponseDto?> UpdateAsync(UpdateCertificationDto dto, int id, string userId)
         {
             var certification = await _context.Certifications
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
-            if (certification == null) return false;
+            if (certification == null) return null;
 
             _mapper.Map(dto, certification);
             certification.UpdatedAt = DateTime.UtcNow;
 
             _context.Certifications.Update(certification);
             await _context.SaveChangesAsync();
-            return true;
+            return _mapper.Map<CertificationResponseDto>(certification);
         }
         public async Task<bool> DeleteAsync(int id, string userId)
         {

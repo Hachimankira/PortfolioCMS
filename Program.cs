@@ -19,10 +19,10 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
 // Register your custom services
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ICertification, CertificationService>();
+builder.Services.AddScoped<IEducationService, EducationService>();
 // builder.Services.AddScoped<IExperience, ExperienceService>();
 // builder.Services.AddScoped<IProject, ProjectService>();
 // builder.Services.AddScoped<ISkill, SkillService>();
-// builder.Services.AddScoped<IEducation, EducationService>();
 // builder.Services.AddScoped<ILanguage, LanguageService>();
 
 // 4. Add services to the container.
