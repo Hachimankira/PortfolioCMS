@@ -1,9 +1,8 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using PortfolioCMS.Data;
+using PortfolioCMS.Models;
+using PortfolioCMS.Services.Implementation;
+using PortfolioCMS.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,9 +13,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // 2. Add authorization
 builder.Services.AddAuthorization();
 // 3. Add Identity 
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<AppDbContext>();
 
+// Register your custom services
+builder.Services.AddScoped<IProfileService, ProfileService>();
 // 4. Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -48,10 +49,11 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
+// cmt this out if AutoMapper.Extensions.Microsoft.DependencyInjection this package is installed.
+// builder.Services.AddAutoMapper(typeof(Program).Assembly);
 var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApi<ApplicationUser>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
