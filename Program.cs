@@ -18,6 +18,13 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
 
 // Register your custom services
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<ICertification, CertificationService>();
+// builder.Services.AddScoped<IExperience, ExperienceService>();
+// builder.Services.AddScoped<IProject, ProjectService>();
+// builder.Services.AddScoped<ISkill, SkillService>();
+// builder.Services.AddScoped<IEducation, EducationService>();
+// builder.Services.AddScoped<ILanguage, LanguageService>();
+
 // 4. Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -50,7 +57,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 // cmt this out if AutoMapper.Extensions.Microsoft.DependencyInjection this package is installed.
-// builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
 app.MapIdentityApi<ApplicationUser>();
