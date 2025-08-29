@@ -29,6 +29,19 @@ namespace PortfolioCMS.Controllers
             return Ok(user);
         }
 
+        // GET: api/profile/full
+        [HttpGet("full")]
+        public async Task<IActionResult> GetFullProfile()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var fullProfile = await _profileService.GetFullProfileAsync(userId);
+            if (fullProfile == null) return NotFound();
+
+            return Ok(fullProfile);
+        }
+
         // PUT: api/profile
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
