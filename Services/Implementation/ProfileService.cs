@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using PortfolioCMS.DTOs;
 using PortfolioCMS.Models;
 using PortfolioCMS.Services.Interfaces;
 
@@ -19,13 +20,17 @@ namespace PortfolioCMS.Services.Implementation
             {
                 cfg.CreateMap<UpdateProfileDto, ApplicationUser>()
                     .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                cfg.CreateMap<ApplicationUser, GetProfileDto>();
             });
             _mapper = new Mapper(config);
         }
 
-        public async Task<ApplicationUser?> GetProfileAsync(string userId)
+        public async Task<GetProfileDto?> GetProfileAsync(string userId)
         {
-            return await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return null;
+
+            return _mapper.Map<GetProfileDto>(user);
         }
 
         public async Task<bool> UpdateProfileAsync(string userId, UpdateProfileDto dto)
