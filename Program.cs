@@ -20,7 +20,7 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ICertification, CertificationService>();
 builder.Services.AddScoped<IEducationService, EducationService>();
-// builder.Services.AddScoped<IExperience, ExperienceService>();
+builder.Services.AddScoped<IExperienceService, ExperienceService>();
 // builder.Services.AddScoped<IProject, ProjectService>();
 // builder.Services.AddScoped<ISkill, SkillService>();
 // builder.Services.AddScoped<ILanguage, LanguageService>();

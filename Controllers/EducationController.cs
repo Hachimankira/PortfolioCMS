@@ -37,6 +37,8 @@ namespace PortfolioCMS.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEducation([FromBody] CreateEducationDto dto)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState); // Returns validation errors
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
             try
@@ -44,15 +46,17 @@ namespace PortfolioCMS.Controllers
                 var education = await _educationService.CreateAsync(dto, userId);
                 return CreatedAtAction(nameof(GetById), new { id = education.Id }, education);
             }
-            catch (ArgumentException ex) 
+            catch (ArgumentException ex)
             {
-                
+
                 return BadRequest(ex.Message);
             }
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateEducationDto dto)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState); // Returns validation errors
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
             var updatedEducation = await _educationService.UpdateAsync(id, dto, userId);

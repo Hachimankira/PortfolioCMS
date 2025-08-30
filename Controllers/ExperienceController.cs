@@ -1,21 +1,20 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PortfolioCMS.DTOs;
+using PortfolioCMS.DTOs.Experience;
 using PortfolioCMS.Services.Interfaces;
 
 namespace PortfolioCMS.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
-    public class CertificationController : ControllerBase
+    public class ExperienceController : ControllerBase
     {
-        private readonly ICertification _certificationService;
-
-        public CertificationController(ICertification certificationService)
+        private readonly IExperienceService _experienceService;
+        public ExperienceController(IExperienceService experienceService)
         {
-            _certificationService = certificationService;
+            _experienceService = experienceService;
         }
 
         [HttpGet]
@@ -23,58 +22,46 @@ namespace PortfolioCMS.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-            var certifications = await _certificationService.GetAllAsync(userId);
-            return Ok(certifications);
+            var experiences = await _experienceService.GetAllExperiencesAsync(userId);
+            return Ok(experiences);
         }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-            var certification = await _certificationService.GetByIdAsync(id, userId);
-            if (certification == null) return NotFound();
-            return Ok(certification);
+            var experience = await _experienceService.GetExperienceByIdAsync(id, userId);
+            if (experience == null) return NotFound();
+            return Ok(experience);
         }
-
         [HttpPost]
-        public async Task<IActionResult> CreateCertification([FromBody] CreateCertificationDto dto)
+        public async Task<IActionResult> CreateExperience([FromBody] CreateExperienceDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState); // Returns validation errors
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-
-            try
-            {
-                var certification = await _certificationService.CreateAsync(dto, userId);
-                return CreatedAtAction(nameof(GetById), new { id = certification.Id }, certification);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var experience = await _experienceService.AddExperienceAsync(dto, userId);
+            return CreatedAtAction(nameof(GetById), new { id = experience.Id }, experience);
         }
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateCertificationDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateExperienceDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState); // Returns validation errors
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-            var result = await _certificationService.UpdateAsync(dto, id, userId);
-            if (result == null) return NotFound();
-            return Ok(result);
+            var updatedExperience = await _experienceService.UpdateExperienceAsync(id, dto, userId);
+            if (updatedExperience == null) return NotFound();
+            return Ok(updatedExperience);
         }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-            var result = await _certificationService.DeleteAsync(id, userId);
-            if (!result) return NotFound();
+            var deleted = await _experienceService.DeleteExperienceAsync(id, userId);
+            if (!deleted) return NotFound();
             return NoContent();
         }
     }

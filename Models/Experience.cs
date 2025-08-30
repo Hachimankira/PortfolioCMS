@@ -2,7 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PortfolioCMS.Models
 {
-    public class Experience: BaseEntity
+    public enum EmploymentType
+    {
+        FullTime,
+        PartTime,
+        Contract,
+        Internship,
+        Freelance
+    }
+    public class Experience : BaseEntity
     {
         [Required]
         [StringLength(150)]
@@ -16,7 +24,7 @@ namespace PortfolioCMS.Models
         public string? Location { get; set; }
 
         [StringLength(50)]
-        public string? EmploymentType { get; set; }
+        public EmploymentType EmploymentType { get; set; }
 
         [Required]
         public DateTime StartDate { get; set; }
