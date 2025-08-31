@@ -1,15 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using PortfolioCMS.Models;
 
-namespace PortfolioCMS.Models
+namespace PortfolioCMS.DTOs.Project
 {
-    public enum ProjectStatus
-    {
-        InProgress,
-        Completed,
-        OnHold,
-        Cancelled
-    }
-    public class Project : BaseEntity
+    public class CreateProjectDto
     {
         [Required]
         [StringLength(150)]
@@ -17,28 +11,27 @@ namespace PortfolioCMS.Models
 
         [StringLength(2000)]
         public string? Description { get; set; }
-        [Url]
 
+        [Url]
         [StringLength(255)]
         public string? FeaturedImageUrl { get; set; }
 
         [StringLength(500)]
         public string? Technologies { get; set; }
 
-        [StringLength(255)]
         [Url]
+        [StringLength(255)]
         public string? RepoUrl { get; set; }
 
-        [StringLength(255)]
         [Url]
+        [StringLength(255)]
         public string? LiveUrl { get; set; }
 
-        public bool IsFeatured { get; set; } = false;
-        public ProjectStatus Status { get; set; } = ProjectStatus.Completed;
-        public int DisplayOrder { get; set; }
+        public bool IsFeatured { get; set; }
+
+        public ProjectStatus? Status { get; set; }
 
         [Required]
-        public string UserId { get; set; } = null!;
-        public ApplicationUser User { get; set; } = null!;
+        public int DisplayOrder { get; set; }
     }
 }
