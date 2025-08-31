@@ -5,7 +5,6 @@ namespace PortfolioCMS.DTOs.Projects
 {
     public class UpdateProjectDto
     {
-        [Required]
         [StringLength(150)]
         public string? Title { get; set; } = string.Empty;
 

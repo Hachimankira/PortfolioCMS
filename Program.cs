@@ -22,7 +22,7 @@ builder.Services.AddScoped<ICertification, CertificationService>();
 builder.Services.AddScoped<IEducationService, EducationService>();
 builder.Services.AddScoped<IExperienceService, ExperienceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-// builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillService, SkillService>();
 // builder.Services.AddScoped<ILanguageService, LanguageService>();
 
 // 4. Add services to the container.
