@@ -23,7 +23,9 @@ builder.Services.AddScoped<IEducationService, EducationService>();
 builder.Services.AddScoped<IExperienceService, ExperienceService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISocialLinksService, SocialLinksService>();
 // builder.Services.AddScoped<ILanguageService, LanguageService>();
+builder.Services.AddScoped<ITestimonialService, TestimonialService>();
 
 // 4. Add services to the container.
 builder.Services.AddControllers();
