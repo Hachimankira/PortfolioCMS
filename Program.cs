@@ -14,12 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // for postgresql
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"), 
-        npgsqlOptions => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"),
+        npgsqlOptions =>
         {
             // Retry on connection failures
             npgsqlOptions.EnableRetryOnFailure(3);
-            
+
             // Set command timeout
             npgsqlOptions.CommandTimeout(30);
         }));
@@ -50,7 +50,7 @@ builder.Services.AddCors(options =>
     // CMS Dashboard CORS policy - restricted to specific origins
     options.AddPolicy("CMSPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://portfolio-cms-front.vercel.app/")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies
@@ -119,7 +119,7 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
-    
+
     // Add operation filter to apply API key security to endpoints with [ApiKey] attribute
     options.OperationFilter<SwaggerApiKeyFilter>();
 });
@@ -129,11 +129,16 @@ var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
 app.UseCors("CMSPolicy");
 app.MapIdentityApi<ApplicationUser>();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
+
+
+// Always enable Swagger for now (you can restrict it later)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -142,15 +147,13 @@ app.UseAuthorization();
 
 // Add this before app.MapControllers()
 app.UseWhen(
-    context => context.Request.Path.StartsWithSegments("/public"), 
+    context => context.Request.Path.StartsWithSegments("/public"),
     appBuilder => appBuilder.UseMiddleware<ApiKeyMiddleware>()
 );
 app.MapControllers();
-// Print all routes to console
-var dataSource = app.Services.GetRequiredService<EndpointDataSource>();
-foreach (var endpoint in dataSource.Endpoints)
-{
-    Console.WriteLine(endpoint.DisplayName);
-}
+// Add this before app.Run()
+app.MapGet("/", () => Results.Redirect("/swagger"));
+// Add this before app.Run()
+app.MapGet("/health", () => "OK");
 app.Run();
 
