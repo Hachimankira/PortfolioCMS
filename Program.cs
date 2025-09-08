@@ -9,8 +9,20 @@ using PortfolioCMS.Services.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Add DbContext
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// for postgresql
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"), 
+        npgsqlOptions => 
+        {
+            // Retry on connection failures
+            npgsqlOptions.EnableRetryOnFailure(3);
+            
+            // Set command timeout
+            npgsqlOptions.CommandTimeout(30);
+        }));
 
 // 2. Add authorization
 builder.Services.AddAuthorization();
@@ -115,7 +127,7 @@ builder.Services.AddSwaggerGen(options =>
 // builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
-app.UseCors("AllowFrontend");
+app.UseCors("CMSPolicy");
 app.MapIdentityApi<ApplicationUser>();
 if (app.Environment.IsDevelopment())
 {
