@@ -2,14 +2,15 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using PortfolioCMS.Services.Interfaces;
-using PortfolioCMS.Models; // Adjust this namespace if ApplicationUser is in a different namespace
-using PortfolioCMS.Attributes; // Assuming ApiKey attribute is in this namespace
+using PortfolioCMS.Models;
+using PortfolioCMS.Attributes;
+using PortfolioCMS.Models.DTOs;
 
 namespace PortfolioCMS.Controllers
 {
     [ApiController]
     [Route("public")]
-    [EnableCors("PublicApiPolicy")] // Use the public CORS policy
+    [EnableCors("PublicApiPolicy")]
     [ApiKey]
     public class PublicController : ControllerBase
     {
@@ -45,14 +46,10 @@ namespace PortfolioCMS.Controllers
         [HttpGet("{username}/projects")]
         public async Task<IActionResult> GetProjects(string username)
         {
-            // Get the username from the middleware
-            var authenticatedUsername = HttpContext.Items["Username"]?.ToString();
-
-            // Get the user by username
             var user = await _userManager.FindByNameAsync(username);
             if (user == null) return NotFound(new { message = "User not found" });
 
-            // Fetch projects for the user
+            // The response DTOs should already exclude sensitive information
             var projects = await _projectService.GetAllProjectsAsync(user.Id);
             return Ok(projects);
         }
@@ -64,31 +61,121 @@ namespace PortfolioCMS.Controllers
             if (user == null) return NotFound(new { message = "User not found" });
 
             var skills = await _skillService.GetAllSkillsAsync(user.Id);
-
             return Ok(skills);
         }
 
-        // [HttpGet("{username}/profile")]
-        // public async Task<IActionResult> GetProfile(string username)
-        // {
-        //     var user = await _userManager.FindByNameAsync(username);
-        //     if (user == null) return NotFound(new { message = "User not found" });
+        [HttpGet("{username}/profile")]
+        public async Task<IActionResult> GetProfile(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
 
-        //     // Return only public profile information
-        //     var profile = new
-        //     {
-        //         FullName = user.FullName,
-        //         Headline = user.Headline,
-        //         Summary = user.Summary,
-        //         Location = user.Location,
-        //         ProfilePictureUrl = user.ProfilePictureUrl
-        //         // Don't include email, phone, or other sensitive data
-        //     };
+            // Create a profile DTO - you might already have a ProfileResponseDto
+            var profile = new
+            {
+                FullName = user.FullName,
+                Headline = user.Headline,
+                Summary = user.Summary,
+                Location = user.Location,
+                ProfilePictureUrl = user.ProfilePictureUrl
+            };
 
-        //     return Ok(profile);
-        // }
+            return Ok(profile);
+        }
+        
+        [HttpGet("{username}/experiences")]
+        public async Task<IActionResult> GetExperiences(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
 
-        // Additional endpoints for other entities (education, experience, etc.)
-        // Follow the same pattern of fetching by username and filtering sensitive data
+            var experiences = await _experienceService.GetAllExperiencesAsync(user.Id);
+            return Ok(experiences);
+        }
+        
+        [HttpGet("{username}/education")]
+        public async Task<IActionResult> GetEducation(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var education = await _educationService.GetAllAsync(user.Id);
+            return Ok(education);
+        }
+        
+        [HttpGet("{username}/certifications")]
+        public async Task<IActionResult> GetCertifications(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var certifications = await _certificationService.GetAllAsync(user.Id);
+            return Ok(certifications);
+        }
+        
+        [HttpGet("{username}/testimonials")]
+        public async Task<IActionResult> GetTestimonials(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var testimonials = await _testimonialService.GetAllAsync(user.Id);
+            
+            // For testimonials, you might still want to filter only approved ones
+            var approvedTestimonials = testimonials.Where(t => t.IsApproved);
+            return Ok(approvedTestimonials);
+        }
+        
+        [HttpGet("{username}/sociallinks")]
+        public async Task<IActionResult> GetSocialLinks(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var socialLinks = await _socialLinksService.GetAllAsync(user.Id);
+            return Ok(socialLinks);
+        }
+        
+        [HttpGet("{username}/all")]
+        public async Task<IActionResult> GetAllPortfolioData(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            // Profile data
+            var profile = new
+            {
+                FullName = user.FullName,
+                Headline = user.Headline,
+                Summary = user.Summary,
+                Location = user.Location,
+                ProfilePictureUrl = user.ProfilePictureUrl
+            };
+
+            // Get all data using the service methods that return DTOs
+            var projects = await _projectService.GetAllProjectsAsync(user.Id);
+            var skills = await _skillService.GetAllSkillsAsync(user.Id);
+            var experiences = await _experienceService.GetAllExperiencesAsync(user.Id);
+            var education = await _educationService.GetAllAsync(user.Id);
+            var certifications = await _certificationService.GetAllAsync(user.Id);
+            var testimonials = await _testimonialService.GetAllAsync(user.Id);
+            var socialLinks = await _socialLinksService.GetAllAsync(user.Id);
+
+            // Filter approved testimonials
+            var approvedTestimonials = testimonials.Where(t => t.IsApproved);
+
+            // Return all data in one response
+            return Ok(new
+            {
+                profile,
+                projects,
+                skills,
+                experiences,
+                education,
+                certifications,
+                testimonials = approvedTestimonials,
+                socialLinks
+            });
+        }
     }
 }
