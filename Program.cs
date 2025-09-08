@@ -14,7 +14,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // for postgresql
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("PostgresConnection"),
+        npgsqlOptions => 
+        {
+            // Add connection resilience with retries
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorCodesToAdd: null);
+            
+            // Increase command timeout for potentially slow operations
+            npgsqlOptions.CommandTimeout(60);
+        }));
 
 // 2. Add authorization
 builder.Services.AddAuthorization();
@@ -147,6 +159,27 @@ app.UseWhen(
     appBuilder => appBuilder.UseMiddleware<ApiKeyMiddleware>()
 );
 app.MapControllers();
+
+// Add this after app.Build() but before app.Run()
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        // Try to connect
+        bool canConnect = dbContext.Database.CanConnect();
+        Console.WriteLine($"Database connection test: {(canConnect ? "Successful" : "Failed")}");
+        
+        if (!canConnect)
+        {
+            Console.WriteLine("Warning: Database connection failed. Application may not function correctly.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database connection error: {ex.Message}");
+    }
+}
 // Add this before app.Run()
 app.MapGet("/", () => Results.Redirect("/swagger"));
 // Add this before app.Run()
