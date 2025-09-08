@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.DTOs.Project;
 using PortfolioCMS.DTOs.Projects;
@@ -10,6 +11,8 @@ namespace PortfolioCMS.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("CMSPolicy")] // Use the restricted CORS policy
+
     public class ProjectController : ControllerBase
     {
         private readonly IProjectService _projectService;
@@ -69,7 +72,7 @@ namespace PortfolioCMS.Controllers
             var deleted = await _projectService.DeleteProjectAsync(id, userId);
             if (!deleted) return NotFound();
             return NoContent();
-         }
+        }
 
     }
 }

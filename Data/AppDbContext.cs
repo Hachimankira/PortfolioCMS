@@ -18,5 +18,7 @@ namespace PortfolioCMS.Data
         public DbSet<Skill> Skills { get; set; }
         public DbSet<SocialLinks> SocialLinks { get; set; }
         public DbSet<Testimonial> Testimonials { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
+
     }
 }
