@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
     // CMS Dashboard CORS policy - restricted to specific origins
     options.AddPolicy("CMSPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://portfolio-cms-front.vercel.app/")
+        policy.WithOrigins("http://localhost:3000", "https://portfolio-cms-front.vercel.app")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies
