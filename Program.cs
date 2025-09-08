@@ -14,17 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // for postgresql
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"),
-        npgsqlOptions =>
-        {
-            // Retry on connection failures
-            npgsqlOptions.EnableRetryOnFailure(5);
-
-            // Set command timeout
-            npgsqlOptions.CommandTimeout(60);
-            // Force IPv4
-            // npgsqlOptions.HostRectifier(host => host); // Removed: Not a valid method
-        }));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
 // 2. Add authorization
 builder.Services.AddAuthorization();
@@ -52,7 +42,11 @@ builder.Services.AddCors(options =>
     // CMS Dashboard CORS policy - restricted to specific origins
     options.AddPolicy("CMSPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://portfolio-cms-front.vercel.app")
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "https://portfolio-cms-front.vercel.app",
+                "https://www.portfolio-cms-front.vercel.app"
+            )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Required for cookies
