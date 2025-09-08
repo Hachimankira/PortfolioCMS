@@ -29,6 +29,16 @@ builder.Services.AddScoped<ITestimonialService, TestimonialService>();
 
 // 4. Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // If using authentication cookies/tokens
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -62,6 +72,7 @@ builder.Services.AddSwaggerGen(options =>
 // builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
+app.UseCors("AllowFrontend");
 app.MapIdentityApi<ApplicationUser>();
 if (app.Environment.IsDevelopment())
 {
@@ -75,6 +86,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+// Print all routes to console
+var dataSource = app.Services.GetRequiredService<EndpointDataSource>();
+foreach (var endpoint in dataSource.Endpoints)
+{
+    Console.WriteLine(endpoint.DisplayName);
+}
 app.Run();
 
