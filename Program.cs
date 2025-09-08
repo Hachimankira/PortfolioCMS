@@ -18,10 +18,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         npgsqlOptions =>
         {
             // Retry on connection failures
-            npgsqlOptions.EnableRetryOnFailure(3);
+            npgsqlOptions.EnableRetryOnFailure(5);
 
             // Set command timeout
-            npgsqlOptions.CommandTimeout(30);
+            npgsqlOptions.CommandTimeout(60);
+            // Force IPv4
+            // npgsqlOptions.HostRectifier(host => host); // Removed: Not a valid method
         }));
 
 // 2. Add authorization
