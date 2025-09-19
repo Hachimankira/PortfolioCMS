@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.Models.DTOs;
 using PortfolioCMS.Services.Interfaces;
@@ -9,6 +10,7 @@ namespace PortfolioCMS.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize] // Assumes authentication is required
+    [EnableCors("CMSPolicy")]
     public class SocialLinksController : ControllerBase
     {
         private readonly ISocialLinksService _service;

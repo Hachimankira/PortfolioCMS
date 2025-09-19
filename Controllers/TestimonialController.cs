@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.Models.DTOs;
 using PortfolioCMS.Services.Interfaces;
@@ -6,9 +7,10 @@ using System.Security.Claims;
 
 namespace PortfolioCMS.Controllers
 {
-    [Authorize] 
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("CMSPolicy")]
     public class TestimonialsController : ControllerBase
     {
         private readonly ITestimonialService _service;

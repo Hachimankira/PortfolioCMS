@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.DTOs;
 using PortfolioCMS.Services.Interfaces;
@@ -9,6 +10,7 @@ namespace PortfolioCMS.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [EnableCors("CMSPolicy")]
     public class CertificationController : ControllerBase
     {
         private readonly ICertification _certificationService;

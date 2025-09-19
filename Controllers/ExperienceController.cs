@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.DTOs.Experience;
 using PortfolioCMS.Services.Interfaces;
@@ -9,6 +10,7 @@ namespace PortfolioCMS.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("CMSPolicy")]
     public class ExperienceController : ControllerBase
     {
         private readonly IExperienceService _experienceService;

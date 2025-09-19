@@ -135,7 +135,7 @@ builder.Services.AddSwaggerGen(options =>
 // builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 // 5. Configure the HTTP request pipeline.
-app.UseCors("CMSPolicy");
+app.UseCors();
 app.MapIdentityApi<ApplicationUser>();
 // if (app.Environment.IsDevelopment())
 // {

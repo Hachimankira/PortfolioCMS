@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortfolioCMS.Services.Interfaces;
 using PortfolioCMS.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace PortfolioCMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [EnableCors("CMSPolicy")]
     public class ProfileController : ControllerBase
     {
         private readonly IProfileService _profileService;
