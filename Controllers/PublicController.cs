@@ -5,9 +5,11 @@ using PortfolioCMS.Services.Interfaces;
 using PortfolioCMS.Models;
 using PortfolioCMS.Attributes;
 using PortfolioCMS.Models.DTOs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace PortfolioCMS.Controllers
 {
+    [EnableRateLimiting("PublicApiRateLimitPolicy")]
     [ApiController]
     [Route("public")]
     [EnableCors("PublicApiPolicy")]
@@ -82,7 +84,7 @@ namespace PortfolioCMS.Controllers
 
             return Ok(profile);
         }
-        
+
         [HttpGet("{username}/experiences")]
         public async Task<IActionResult> GetExperiences(string username)
         {
@@ -92,7 +94,7 @@ namespace PortfolioCMS.Controllers
             var experiences = await _experienceService.GetAllExperiencesAsync(user.Id);
             return Ok(experiences);
         }
-        
+
         [HttpGet("{username}/education")]
         public async Task<IActionResult> GetEducation(string username)
         {
@@ -102,7 +104,7 @@ namespace PortfolioCMS.Controllers
             var education = await _educationService.GetAllAsync(user.Id);
             return Ok(education);
         }
-        
+
         [HttpGet("{username}/certifications")]
         public async Task<IActionResult> GetCertifications(string username)
         {
@@ -112,7 +114,7 @@ namespace PortfolioCMS.Controllers
             var certifications = await _certificationService.GetAllAsync(user.Id);
             return Ok(certifications);
         }
-        
+
         [HttpGet("{username}/testimonials")]
         public async Task<IActionResult> GetTestimonials(string username)
         {
@@ -120,12 +122,12 @@ namespace PortfolioCMS.Controllers
             if (user == null) return NotFound(new { message = "User not found" });
 
             var testimonials = await _testimonialService.GetAllAsync(user.Id);
-            
+
             // For testimonials, you might still want to filter only approved ones
             var approvedTestimonials = testimonials.Where(t => t.IsApproved);
             return Ok(approvedTestimonials);
         }
-        
+
         [HttpGet("{username}/sociallinks")]
         public async Task<IActionResult> GetSocialLinks(string username)
         {
@@ -135,7 +137,7 @@ namespace PortfolioCMS.Controllers
             var socialLinks = await _socialLinksService.GetAllAsync(user.Id);
             return Ok(socialLinks);
         }
-        
+
         [HttpGet("{username}/all")]
         public async Task<IActionResult> GetAllPortfolioData(string username)
         {

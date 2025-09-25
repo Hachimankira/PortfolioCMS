@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using PortfolioCMS.Data;
 using PortfolioCMS.Filters;
@@ -16,14 +17,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("PostgresConnection"),
-        npgsqlOptions => 
+        npgsqlOptions =>
         {
             // Add connection resilience with retries
             npgsqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorCodesToAdd: null);
-            
+
             // Increase command timeout for potentially slow operations
             npgsqlOptions.CommandTimeout(60);
         }));
@@ -72,6 +73,23 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// ratee limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests; // Set 429 status code
+    options.AddPolicy("PublicApiRateLimitPolicy", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Request.Headers["X-API-Key"].FirstOrDefault() ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: key => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10, // 10 requests
+                Window = TimeSpan.FromMinutes(1), // per minute
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -134,55 +152,36 @@ builder.Services.AddSwaggerGen(options =>
 // cmt this out if AutoMapper.Extensions.Microsoft.DependencyInjection this package is installed.
 // builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
-// 5. Configure the HTTP request pipeline.
-app.UseCors("CMSPolicy");
-app.MapIdentityApi<ApplicationUser>();
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
-
+app.UseHttpsRedirection();
+app.UseStaticFiles(); // Added to fix middleware pipeline order in case it was missing
 
 // Always enable Swagger for now (you can restrict it later)
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/public"),
+    appBuilder =>
+    {
+        // For public API routes, first process the API Key, then apply the rate limiter
+        appBuilder.UseMiddleware<ApiKeyMiddleware>();
+    }
+);
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add this before app.MapControllers()
-app.UseWhen(
-    context => context.Request.Path.StartsWithSegments("/public"),
-    appBuilder => appBuilder.UseMiddleware<ApiKeyMiddleware>()
-);
+// 5. Configure the HTTP request pipeline.
+app.UseCors("CMSPolicy");
+app.MapIdentityApi<ApplicationUser>();
+
 app.MapControllers();
 
-// Add this after app.Build() but before app.Run()
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    try
-    {
-        // Try to connect
-        bool canConnect = dbContext.Database.CanConnect();
-        Console.WriteLine($"Database connection test: {(canConnect ? "Successful" : "Failed")}");
-        
-        if (!canConnect)
-        {
-            Console.WriteLine("Warning: Database connection failed. Application may not function correctly.");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database connection error: {ex.Message}");
-    }
-}
 // Add this before app.Run()
 app.MapGet("/", () => Results.Redirect("/swagger"));
-// Add this before app.Run()
-app.MapGet("/health", () => "OK");
 app.Run();
 
