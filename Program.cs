@@ -59,8 +59,8 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("PublicApiRateLimitPolicy", context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Request.Headers["X-API-Key"].FirstOrDefault() 
-                          ?? context.Connection.RemoteIpAddress?.ToString() 
+            partitionKey: context.Request.Headers["X-API-Key"].FirstOrDefault()
+                          ?? context.Connection.RemoteIpAddress?.ToString()
                           ?? "anonymous",
             factory: key => new FixedWindowRateLimiterOptions
             {
@@ -123,18 +123,6 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 // 8. Middleware order matters
-
-// Enable CORS first
-app.UseCors("CMSPolicy");
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.UseRouting();
-
 // Handle OPTIONS requests for preflight
 app.Use(async (context, next) =>
 {
@@ -146,6 +134,17 @@ app.Use(async (context, next) =>
     }
     await next();
 });
+// Enable CORS first
+app.UseCors("CMSPolicy");
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseRouting();
+
 
 // Authentication & authorization
 app.UseAuthentication();
