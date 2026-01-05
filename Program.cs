@@ -136,8 +136,6 @@ var app = builder.Build();
 //     }
 //     await next();
 // });
-// Enable CORS first
-app.UseCors("CMSPolicy");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -147,6 +145,7 @@ app.UseSwaggerUI();
 
 app.UseRouting();
 
+app.UseCors("CMSPolicy");
 
 // Authentication & authorization
 app.UseAuthentication();
