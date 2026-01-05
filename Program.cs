@@ -46,7 +46,9 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:3000",
                 "https://portfolio-cms-front.vercel.app",
-                "https://www.portfolio-cms-front.vercel.app")
+                "https://www.portfolio-cms-front.vercel.app",
+                "https://portfoliocms-3pl6.onrender.com"
+                )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -124,16 +126,16 @@ var app = builder.Build();
 
 // 8. Middleware order matters
 // Handle OPTIONS requests for preflight
-app.Use(async (context, next) =>
-{
-    if (context.Request.Method == "OPTIONS")
-    {
-        context.Response.StatusCode = 200;
-        await context.Response.CompleteAsync();
-        return;
-    }
-    await next();
-});
+// app.Use(async (context, next) =>
+// {
+//     if (context.Request.Method == "OPTIONS")
+//     {
+//         context.Response.StatusCode = 200;
+//         await context.Response.CompleteAsync();
+//         return;
+//     }
+//     await next();
+// });
 // Enable CORS first
 app.UseCors("CMSPolicy");
 
