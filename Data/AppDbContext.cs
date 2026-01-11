@@ -19,6 +19,7 @@ namespace PortfolioCMS.Data
         public DbSet<SocialLinks> SocialLinks { get; set; }
         public DbSet<Testimonial> Testimonials { get; set; }
         public DbSet<ApiKey> ApiKeys { get; set; }
+        public DbSet<SocialPlatform> SocialPlatforms { get; set; }
 
     }
 }

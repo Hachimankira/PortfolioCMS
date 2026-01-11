@@ -34,6 +34,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<ISocialLinksService, SocialLinksService>();
 builder.Services.AddScoped<ITestimonialService, TestimonialService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<ISocialPlatformService, SocialPlatformService>();
 
 // 4. Add controllers
 builder.Services.AddControllers();
@@ -167,5 +168,16 @@ app.MapControllers();
 
 // Redirect root to Swagger
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    // Apply any pending migrations automatically (Optional, but good for dev)
+    // context.Database.Migrate(); 
+    
+    // Run Seeder
+    await PortfolioCMS.Data.Seeding.SocialPlatformSeeder.SeedAsync(context);
+}
 
 app.Run();
