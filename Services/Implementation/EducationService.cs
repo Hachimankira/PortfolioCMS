@@ -1,4 +1,6 @@
 using PortfolioCMS.DTOs;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 using PortfolioCMS.Models;
 using PortfolioCMS.Services.Interfaces;
 using AutoMapper;
@@ -23,14 +25,32 @@ namespace PortfolioCMS.Services.Implementation
             });
             _mapper = new Mapper(config);
         }
-        public async Task<IEnumerable<EducationResponseDto>> GetAllAsync(string userId)
+        public async Task<PagedResult<EducationResponseDto>> GetAllAsync(string userId, PaginationFilter filter)
         {
-            var educations = await _context.Educations
-                .Where(e => e.UserId == userId)
-                .OrderBy(e => e.DisplayOrder)
-                .ThenBy(e => e.CreatedAt)  // Order by CreatedAt if DisplayOrder is the same
+            var query = _context.Educations.Where(e => e.UserId == userId);
+
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(e => e.Institution.Contains(filter.SearchTerm) || e.Degree.Contains(filter.SearchTerm) || (e.FieldOfStudy != null && e.FieldOfStudy.Contains(filter.SearchTerm)));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(e => e.DisplayOrder).ThenBy(e => e.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var educations = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<EducationResponseDto>>(educations);
+
+            var dtos = _mapper.Map<IEnumerable<EducationResponseDto>>(educations);
+            return new PagedResult<EducationResponseDto>(dtos, totalRecords);
         }
         public async Task<EducationResponseDto?> GetByIdAsync(int id, string userId)
         {

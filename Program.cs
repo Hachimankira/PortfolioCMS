@@ -79,6 +79,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new() { Title = "PortfolioCMS API", Version = "v1" });
 
+    options.EnableAnnotations();
     options.AddSecurityDefinition("Bearer", new()
     {
         Name = "Authorization",

@@ -5,6 +5,9 @@ using PortfolioCMS.DTOs.Project;
 using PortfolioCMS.DTOs.Projects;
 using PortfolioCMS.Models;
 using PortfolioCMS.Services.Interfaces;
+using PortfolioCMS.Extensions;
+using PortfolioCMS.DTOs;
+using PortfolioCMS.Models.Wrappers;
 
 namespace PortfolioCMS.Services.Implementation
 {
@@ -27,14 +30,34 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = new Mapper(config);
         }
 
-        public async Task<IEnumerable<ProjectResponseDto>> GetAllProjectsAsync(string userId)
+        public async Task<PagedResult<ProjectResponseDto>> GetAllProjectsAsync(string userId, PaginationFilter filter)
         {
-            var projects = await _context.Projects
-                .Where(p => p.UserId == userId)
-                .OrderBy(p => p.DisplayOrder)
-                .ThenBy(p => p.CreatedAt)
+            var query = _context.Projects.Where(p => p.UserId == userId);
+
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                // Simple search implementation
+                query = query.Where(p => p.Title.Contains(filter.SearchTerm) || (p.Description != null && p.Description.Contains(filter.SearchTerm)));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(p => p.DisplayOrder).ThenBy(p => p.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var projects = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<ProjectResponseDto>>(projects);
+
+            var projectDtos = _mapper.Map<IEnumerable<ProjectResponseDto>>(projects); // DTO Mapping
+            
+            return new PagedResult<ProjectResponseDto>(projectDtos, totalRecords);
         }
 
         public async Task<ProjectResponseDto?> GetProjectByIdAsync(int id, string userId)

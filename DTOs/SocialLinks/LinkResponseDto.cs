@@ -1,14 +1,26 @@
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace PortfolioCMS.Models.DTOs
 {
     public class LinkResponseDto
     {
+        [SwaggerSchema(Description = "Unique identifier of the social link")]
         public int Id { get; set; }
+
+        [SwaggerSchema(Description = "Name of the platform (e.g., LinkedIn, GitHub)")]
         public string Platform { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "URL of the social profile")]
         public string Url { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "URL of the platform icon")]
         public string? IconUrl { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "Display order for the link")]
         public int DisplayOrder { get; set; }
+
+        [SwaggerSchema(Description = "ID of the user who owns this link")]
         public string UserId { get; set; } = string.Empty;
         // Optionally include User details if needed, but omitted here to avoid navigation
     }

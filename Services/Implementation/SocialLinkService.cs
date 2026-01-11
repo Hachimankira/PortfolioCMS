@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using PortfolioCMS.Data;
 using PortfolioCMS.Models;
 using PortfolioCMS.Models.DTOs;
+using PortfolioCMS.DTOs;
 using PortfolioCMS.Services.Interfaces;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 
 namespace PortfolioCMS.Services.Implementation
 {
@@ -26,14 +29,32 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = new Mapper(config);
         }
 
-        public async Task<IEnumerable<LinkResponseDto>> GetAllAsync(string userId)
+        public async Task<PagedResult<LinkResponseDto>> GetAllAsync(string userId, PaginationFilter filter)
         {
-            var links = await _context.SocialLinks
-                .Where(l => l.UserId == userId)
-                .OrderBy(l => l.DisplayOrder)
-                .ThenBy(l => l.CreatedAt)
+            var query = _context.SocialLinks.Where(l => l.UserId == userId);
+
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(l => l.Platform.Contains(filter.SearchTerm) || l.Url.Contains(filter.SearchTerm));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(l => l.DisplayOrder).ThenBy(l => l.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var links = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<LinkResponseDto>>(links);
+
+            var dtos = _mapper.Map<IEnumerable<LinkResponseDto>>(links);
+            return new PagedResult<LinkResponseDto>(dtos, totalRecords);
         }
 
         public async Task<LinkResponseDto?> GetByIdAsync(int id, string userId)

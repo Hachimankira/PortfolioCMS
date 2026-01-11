@@ -2,8 +2,11 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PortfolioCMS.Data;
 using PortfolioCMS.DTOs.Experience;
+using PortfolioCMS.DTOs;
 using PortfolioCMS.Models;
 using PortfolioCMS.Services.Interfaces;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 
 namespace PortfolioCMS.Services.Implementation
 {
@@ -26,14 +29,32 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = new Mapper(config);
         }
 
-        public async Task<IEnumerable<ExperienceResponseDto>> GetAllExperiencesAsync(string userId)
+        public async Task<PagedResult<ExperienceResponseDto>> GetAllExperiencesAsync(string userId, PaginationFilter filter)
         {
-            var experiences = await _context.Experiences
-                .Where(e => e.UserId == userId)
-                .OrderBy(e => e.DisplayOrder)
-                .ThenBy(e => e.CreatedAt)  // Order by CreatedAt if DisplayOrder is the same
+            var query = _context.Experiences.Where(e => e.UserId == userId);
+
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(e => e.Company.Contains(filter.SearchTerm) || e.Position.Contains(filter.SearchTerm) || (e.Description != null && e.Description.Contains(filter.SearchTerm)));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(e => e.DisplayOrder).ThenBy(e => e.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var experiences = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<ExperienceResponseDto>>(experiences);
+
+            var dtos = _mapper.Map<IEnumerable<ExperienceResponseDto>>(experiences);
+            return new PagedResult<ExperienceResponseDto>(dtos, totalRecords);
         }
         public async Task<ExperienceResponseDto?> GetExperienceByIdAsync(int id, string userId)
         {

@@ -1,18 +1,38 @@
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace PortfolioCMS.Models.DTOs
 {
     public class TestimonialResponseDto
     {
+        [SwaggerSchema(Description = "Unique identifier of the testimonial")]
         public int Id { get; set; }
+
+        [SwaggerSchema(Description = "Content/Body of the testimonial")]
         public string Content { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "Name of the client who gave the testimonial")]
         public string ClientName { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "Title/Position of the client")]
         public string? ClientTitle { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "Company of the client")]
         public string? ClientCompany { get; set; } = string.Empty;
+
+        [SwaggerSchema(Description = "URL of the client's photo")]
         public string? ClientImageUrl { get; set; }
+
+        [SwaggerSchema(Description = "Rating given by the client (1-5)")]
         public int? Rating { get; set; }
+
+        [SwaggerSchema(Description = "Indicates if the testimonial is approved for public display")]
         public bool IsApproved { get; set; }
+
+        [SwaggerSchema(Description = "Indicates if the testimonial is featured")]
         public bool IsFeatured { get; set; }
+
+        [SwaggerSchema(Description = "Display order for the testimonial")]
         public int DisplayOrder { get; set; }
     }
 

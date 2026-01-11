@@ -2,8 +2,11 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PortfolioCMS.Data;
 using PortfolioCMS.DTOs.Skill;
+using PortfolioCMS.DTOs;
 using PortfolioCMS.Models;
 using PortfolioCMS.Services.Interfaces;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 
 namespace PortfolioCMS.Services.Implementation
 {
@@ -27,14 +30,32 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = new Mapper(config);
         }
 
-        public async Task<IEnumerable<SkillResponseDto>> GetAllSkillsAsync(string userId)
+        public async Task<PagedResult<SkillResponseDto>> GetAllSkillsAsync(string userId, PaginationFilter filter)
         {
-            var skills = await _context.Skills
-                .Where(s => s.UserId == userId)
-                .OrderBy(s => s.DisplayOrder)
-                .ThenBy(s => s.CreatedAt)
+            var query = _context.Skills.Where(s => s.UserId == userId);
+            
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(s => s.Name.Contains(filter.SearchTerm) || (s.Category != null && s.Category.Contains(filter.SearchTerm)));
+            }
+            
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(s => s.DisplayOrder).ThenBy(s => s.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var skills = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<SkillResponseDto>>(skills);
+
+            var dtos = _mapper.Map<IEnumerable<SkillResponseDto>>(skills);
+            return new PagedResult<SkillResponseDto>(dtos, totalRecords);
         }
 
         public async Task<SkillResponseDto?> GetSkillByIdAsync(int id, string userId)

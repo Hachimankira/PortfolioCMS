@@ -1,5 +1,7 @@
 using PortfolioCMS.DTOs;
 using PortfolioCMS.Models;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 using PortfolioCMS.Services.Interfaces;
 using AutoMapper;
 using PortfolioCMS.Data;
@@ -25,14 +27,32 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = new Mapper(config);
         }
 
-        public async Task<IEnumerable<CertificationResponseDto>> GetAllAsync(string userId)
+        public async Task<PagedResult<CertificationResponseDto>> GetAllAsync(string userId, PaginationFilter filter)
         {
-            var certifications = await _context.Certifications
-                .Where(c => c.UserId == userId)
-                .OrderBy(c => c.DisplayOrder)
-                .ThenBy(c => c.CreatedAt)  // Order by CreatedAt if DisplayOrder is the same
+            var query = _context.Certifications.Where(c => c.UserId == userId);
+            
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(c => c.Title.Contains(filter.SearchTerm) || c.Issuer.Contains(filter.SearchTerm));
+            }
+            
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(c => c.DisplayOrder).ThenBy(c => c.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var certifications = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<CertificationResponseDto>>(certifications);
+                
+            var dtos = _mapper.Map<IEnumerable<CertificationResponseDto>>(certifications);
+            return new PagedResult<CertificationResponseDto>(dtos, totalRecords);
         }
 
         public async Task<CertificationResponseDto?> GetByIdAsync(int id, string userId)

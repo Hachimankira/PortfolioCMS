@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using PortfolioCMS.Data;
 using PortfolioCMS.Models;
 using PortfolioCMS.Models.DTOs;
+using PortfolioCMS.DTOs;
 using PortfolioCMS.Services.Interfaces;
+using PortfolioCMS.Models.Wrappers;
+using PortfolioCMS.Extensions;
 
 namespace PortfolioCMS.Services.Implementation
 {
@@ -26,14 +29,32 @@ namespace PortfolioCMS.Services.Implementation
             _mapper = config.CreateMapper();
         }
 
-        public async Task<IEnumerable<TestimonialResponseDto>> GetAllAsync(string userId)
+        public async Task<PagedResult<TestimonialResponseDto>> GetAllAsync(string userId, PaginationFilter filter)
         {
-            var testimonials = await _context.Testimonials
-                .Where(t => t.UserId == userId)
-                .OrderBy(t => t.DisplayOrder)
-                .ThenBy(t => t.CreatedAt)
+            var query = _context.Testimonials.Where(t => t.UserId == userId);
+
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(t => t.ClientName.Contains(filter.SearchTerm) || t.Content.Contains(filter.SearchTerm) || (t.ClientCompany != null && t.ClientCompany.Contains(filter.SearchTerm)));
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            if (string.IsNullOrEmpty(filter.SortColumn))
+            {
+                query = query.OrderBy(t => t.DisplayOrder).ThenBy(t => t.CreatedAt);
+            }
+            else
+            {
+                query = query.ApplySorting(filter.SortColumn, filter.SortDirection);
+            }
+
+            var testimonials = await query
+                .ApplyPaging(filter.PageNumber, filter.PageSize)
                 .ToListAsync();
-            return _mapper.Map<IEnumerable<TestimonialResponseDto>>(testimonials);
+
+            var dtos = _mapper.Map<IEnumerable<TestimonialResponseDto>>(testimonials);
+            return new PagedResult<TestimonialResponseDto>(dtos, totalRecords);
         }
 
         public async Task<TestimonialResponseDto?> GetByIdAsync(int id, string userId)

@@ -1,11 +1,13 @@
+using PortfolioCMS.DTOs;
 using PortfolioCMS.DTOs.Project;
 using PortfolioCMS.DTOs.Projects;
+using PortfolioCMS.Models.Wrappers;
 
 namespace PortfolioCMS.Services.Interfaces
 {
     public interface IProjectService
     {
-        Task<IEnumerable<ProjectResponseDto>> GetAllProjectsAsync(string userId);
+        Task<PagedResult<ProjectResponseDto>> GetAllProjectsAsync(string userId, PaginationFilter filter);
         Task<ProjectResponseDto?> GetProjectByIdAsync(int id, string userId);
         Task<ProjectResponseDto> CreateProjectAsync(CreateProjectDto createProjectDto, string userId);
         Task<ProjectResponseDto?> UpdateProjectAsync(int id, UpdateProjectDto updateProjectDto, string userId);
